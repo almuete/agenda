@@ -195,7 +195,7 @@ function StateManagement({ ...pageProps }) {
 							>
 								<div className="relative">
 									<Switch
-										checked={checked}
+										checked={v.status}
 										onCheckedChange={() => inlineUpdateStatus(v.id, v.status)}
 									/>
 
