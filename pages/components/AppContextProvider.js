@@ -1,19 +1,18 @@
-import React, { useState, createContext, useCallback } from 'react'
-
+import React, { createContext } from "react";
 
 export const AppContext = createContext();
 
-const AppContextProvider = ({...props}) => {
-    const { router } = props.pageProps || {};
+const AppContextProvider = ({ ...props }) => {
+	const theme = "dark";
 
-    const theme = "dark";
-
-    return (
-        <AppContext.Provider value={{ 
-            theme: theme,
-        }}>
-        	{props.children}
-        </AppContext.Provider>
-    );
-}
+	return (
+		<AppContext.Provider
+			value={{
+				theme: theme,
+			}}
+		>
+			{props.children}
+		</AppContext.Provider>
+	);
+};
 export default AppContextProvider;

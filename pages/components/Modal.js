@@ -1,5 +1,5 @@
 export default function Modal({ ...pageProps }) {
-	const { isOpen, handleDeleteConfirmTodo, deleteId } = pageProps;
+	const { handleDeleteConfirmTodo, deleteId } = pageProps;
 
 	return (
 		<>
