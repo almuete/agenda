@@ -40,7 +40,7 @@ function StateManagement({ ...pageProps }) {
 	const [date, setDate] = useState(new Date());
 	const [selectedDate, setSelectedDate] = useState(new Date()); // State to store selected date
 
-	const getLocalStorage = (name) => {
+	const getLocalStorage = (name: any) => {
 		if (typeof window !== "undefined") {
 			return localStorage.getItem(name);
 		}
@@ -72,10 +72,10 @@ function StateManagement({ ...pageProps }) {
 	const handleSaveTodos = (e) => {
 		e.preventDefault();
 		let id = uniqid.time();
-		let title = e.target.title.value;
-		let desc = e.target.desc.value;
-		let nstatus = status ? 1 : 0;
-		let date = format(selectedDate, "MMMM dd, yyyy");
+		const title = e.target.title.value;
+		const desc = e.target.desc.value;
+		const nstatus = status ? 1 : 0;
+		const date = format(selectedDate, "MMMM dd, yyyy");
 
 		// check if fields is empty
 		//if(_.isEmpty(title) || _.isEmpty(desc)) return
@@ -111,7 +111,7 @@ function StateManagement({ ...pageProps }) {
 
 	const handleDeleteConfirmTodo = (confirmation, id) => {
 		if (confirmation) {
-			let newTodoList = delete stateManagement.todos[id];
+			//let newTodoList = delete stateManagement.todos[id];
 			setStateManagement((prevStateManagement) => {
 				return {
 					...prevStateManagement,
@@ -125,7 +125,7 @@ function StateManagement({ ...pageProps }) {
 	};
 
 	const handleEditTodo = (id) => {
-		let todo = stateManagement.todos[id];
+		const todo = stateManagement.todos[id];
 		setTitle(todo.title);
 		setDesc(todo.desc);
 		setStatus(todo.status);
