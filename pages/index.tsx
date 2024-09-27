@@ -377,7 +377,7 @@ function StateManagement({ ...pageProps }) {
 								<hr className="mt-4" />
 								<div className="flex flex-row-reverse p-3">
 									<div className="flex space-x-2 pl-3">
-										{_.size(isEdit) !== 0 && (
+										{_.size(isEdit) && isEdit.id && (
 											<button
 												type="button"
 												onClick={() => handleCancelEdit()}
