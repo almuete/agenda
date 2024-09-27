@@ -296,7 +296,7 @@ function StateManagement({ ...pageProps }) {
 											<ClipboardListIcon className="" />
 										</div>
 										<h1 className="inline text-2xl font-semibold leading-none ">
-											{_.size(isEdit) ? "Update" : "Add"}
+											{_.size(isEdit) && isEdit.id ? "Update" : "Add"}
 										</h1>
 									</div>
 								</div>
