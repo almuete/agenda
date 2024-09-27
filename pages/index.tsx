@@ -187,7 +187,10 @@ function StateManagement({ ...pageProps }) {
 						}`}
 					>
 						<td className="py-5 px-3 max-w-xs align-top">{v.title}</td>
-						<td className="py-5 px-3 max-w-xs align-top">{v.desc || "--"}</td>
+						<td className="flex flex-col py-5 px-3 max-w-xs align-top w-auto">
+							<p>{format(v.date, "MMM dd, yy") || "--"}</p>
+							<p>{v.desc || "--"}</p>
+						</td>
 						<td className="hidden py-5 px-3 text-center text-sm align-top">
 							<label
 								htmlFor={`status_${v.id}`}
@@ -213,11 +216,11 @@ function StateManagement({ ...pageProps }) {
 								</div>
 							</label>
 						</td>
-						<td className="py-5 px-3 max-w-xs align-top">
+						<td className="hidden py-5 px-3 max-w-xs align-top">
 							{format(v.date, "MMM dd, yy") || "--"}
 						</td>
 						<td className="py-5 px-3 align-top w-fit">
-							<div className="flex gap-4 justify-start items-center ">
+							<div className="flex gap-4 justify-start items-center w-fit">
 								<AlertDialog>
 									<AlertDialogTrigger asChild>
 										<button
@@ -436,7 +439,7 @@ function StateManagement({ ...pageProps }) {
 											<th className="hidden text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
 												Status
 											</th>
-											<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-40">
+											<th className="hidden text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-40">
 												Date
 											</th>
 											<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider align-left w-fit">
