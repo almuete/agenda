@@ -186,9 +186,9 @@ function StateManagement({ ...pageProps }) {
 							v.status ? "line-through" : ""
 						}`}
 					>
-						<td className="p-4 max-w-xs align-top">{v.title}</td>
-						<td className="p-4 max-w-xs align-top">{v.desc || "--"}</td>
-						<td className="p-4 text-center text-sm align-top">
+						<td className="py-5 px-3 max-w-xs align-top">{v.title}</td>
+						<td className="py-5 px-3 max-w-xs align-top">{v.desc || "--"}</td>
+						<td className="hidden py-5 px-3 text-center text-sm align-top">
 							<label
 								htmlFor={`status_${v.id}`}
 								className="flex items-center cursor-pointer"
@@ -213,16 +213,16 @@ function StateManagement({ ...pageProps }) {
 								</div>
 							</label>
 						</td>
-						<td className="p-4 max-w-xs align-top">
-							{format(v.date, "MMMM dd, yyyy") || "--"}
+						<td className="py-5 px-3 max-w-xs align-top">
+							{format(v.date, "MMM dd, yy") || "--"}
 						</td>
-						<td className="p-4 align-top w-fit">
-							<div className=" space-x-4 align-left ">
+						<td className="py-5 px-3 align-top w-fit">
+							<div className="flex gap-4 justify-start items-center ">
 								<AlertDialog>
 									<AlertDialogTrigger asChild>
 										<button
 											onClick={() => handleDeleteTodo(v.id)}
-											className="w-6 h-6"
+											className="w-6 h-6 text-red-600"
 										>
 											<TrashIcon />
 										</button>
@@ -255,6 +255,11 @@ function StateManagement({ ...pageProps }) {
 								>
 									<PencilIcon />
 								</button>
+
+								<Switch
+									checked={v.status}
+									onCheckedChange={() => inlineUpdateStatus(v.id, v.status)}
+								/>
 							</div>
 						</td>
 					</tr>
@@ -304,9 +309,9 @@ function StateManagement({ ...pageProps }) {
 						POCHENG-
 					</h1>
 					<form onSubmit={(e) => handleSaveTodos(e)} method="post">
-						<div className="mt-5  rounded-lg shadow">
+						<div className="mt-2  rounded-lg shadow">
 							<div className="flex">
-								<div className="flex items-center py-5 pl-5 overflow-hidden">
+								<div className="flex items-center py-4 pl-3 overflow-hidden">
 									<div className="w-6 h-6 ">
 										<ClipboardListIcon className="" />
 									</div>
@@ -315,7 +320,7 @@ function StateManagement({ ...pageProps }) {
 									</h1>
 								</div>
 							</div>
-							<div className="px-5 pb-5">
+							<div className="px-3 pb-3">
 								<div className="text-gray-900 hidden">
 									{_.size(isEdit) && isEdit.id && (
 										<div>Edit ID: {isEdit.id}</div>
@@ -408,7 +413,7 @@ function StateManagement({ ...pageProps }) {
 
 					<div className="mt-5  rounded-lg shadow text-gray-900">
 						<div className="flex">
-							<div className="flex items-center py-5 pl-5 overflow-hidden">
+							<div className="flex items-center py-5 pl-3 overflow-hidden">
 								<div className="w-6 h-6 ">
 									<CollectionIcon className=" " />
 								</div>
@@ -417,24 +422,24 @@ function StateManagement({ ...pageProps }) {
 								</h1>
 							</div>
 						</div>
-						<div className=" p-5 pt-0 overflow-x-auto	">
+						<div className=" p-3 pt-0 overflow-x-auto	">
 							{_.size(todoLists) != 0 ? (
 								<table className="w-full table-auto border-collapse">
 									<thead className="text-left">
 										<tr>
-											<th className="text-lg text-gray-900 px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+											<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
 												Title
 											</th>
-											<th className="text-lg text-gray-900 px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+											<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
 												Description
 											</th>
-											<th className="text-lg text-gray-900 px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+											<th className="hidden text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
 												Status
 											</th>
-											<th className="text-lg text-gray-900 px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+											<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-40">
 												Date
 											</th>
-											<th className="text-lg text-gray-900 px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider align-left w-fit">
+											<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider align-left w-fit">
 												Actions
 											</th>
 										</tr>

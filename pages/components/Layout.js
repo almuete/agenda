@@ -4,7 +4,7 @@ const Layout = ({ children }) => {
 	return (
 		<main>
 			<Toaster />
-			armin{children}
+			{children}
 		</main>
 	);
 };
