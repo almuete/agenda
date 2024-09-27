@@ -217,12 +217,12 @@ function StateManagement({ ...pageProps }) {
 							{format(v.date, "MMMM dd, yyyy") || "--"}
 						</td>
 						<td className="p-4 align-top w-fit">
-							<div className=" space-x-2 align-left ">
+							<div className=" space-x-4 align-left ">
 								<AlertDialog>
 									<AlertDialogTrigger asChild>
 										<button
 											onClick={() => handleDeleteTodo(v.id)}
-											className="w-4 h-4"
+											className="w-6 h-6"
 										>
 											<TrashIcon />
 										</button>
@@ -251,7 +251,7 @@ function StateManagement({ ...pageProps }) {
 
 								<button
 									onClick={() => handleEditTodo(v.id)}
-									className="w-4 h-4"
+									className="w-6 h-6"
 								>
 									<PencilIcon />
 								</button>
