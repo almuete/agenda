@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import {
 	TrashIcon,
 	PencilIcon,
@@ -29,12 +29,19 @@ import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns"; // Optional: for formatting the date
 
 function StateManagement({ ...pageProps }) {
+	const todoDefault = {
+		id: "",
+		title: "",
+		desc: "",
+		nstatus: 0,
+		date: "",
+	};
 	//console.log('pageProps', pageProps);
-	const [isEdit, setIsEdit] = useState({});
-	const [title, setTitle] = useState();
-	const [name, setName] = useState();
-	const [desc, setDesc] = useState();
-	const [status, setStatus] = useState(0);
+	const [isEdit, setIsEdit] = useState(todoDefault);
+	const [title, setTitle] = useState("");
+	//const [name, setName] = useState();
+	const [desc, setDesc] = useState("");
+	const [status, setStatus] = useState(false);
 	const [isOpen, setIsOpen] = useState(false);
 	const [deleteId, setDeleteId] = useState(false);
 	const [date, setDate] = useState(new Date());
@@ -71,7 +78,7 @@ function StateManagement({ ...pageProps }) {
 
 	const handleSaveTodos = (e: any) => {
 		e.preventDefault();
-		let id = uniqid.time();
+		let id = isEdit.id || uniqid.time();
 		const title = e.target.title.value;
 		const desc = e.target.desc.value;
 		const nstatus = status ? 1 : 0;
@@ -81,14 +88,8 @@ function StateManagement({ ...pageProps }) {
 		//if(_.isEmpty(title) || _.isEmpty(desc)) return
 		if (_.isEmpty(title)) return;
 
-		// check if form is edit
-		if (_.size(isEdit)) {
-			// is edit
-			id = isEdit.id;
-		}
-
 		// save state
-		setStateManagement((prevStateManagement) => {
+		setStateManagement((prevStateManagement: any) => {
 			return {
 				...prevStateManagement, // to preserve all the states
 				todos: {
@@ -100,19 +101,19 @@ function StateManagement({ ...pageProps }) {
 
 		setTitle("");
 		setDesc("");
-		setStatus("");
-		setIsEdit("");
+		setStatus(false);
+		setIsEdit(todoDefault);
 	};
 
-	const handleDeleteTodo = (id) => {
+	const handleDeleteTodo = (id: any) => {
 		setIsOpen(true);
 		setDeleteId(id);
 	};
 
-	const handleDeleteConfirmTodo = (confirmation, id) => {
+	const handleDeleteConfirmTodo = (confirmation: any, id: any) => {
 		if (confirmation) {
-			//let newTodoList = delete stateManagement.todos[id];
-			setStateManagement((prevStateManagement) => {
+			let newTodoList = delete stateManagement.todos[id];
+			setStateManagement((prevStateManagement: any) => {
 				return {
 					...prevStateManagement,
 					todos: stateManagement.todos,
@@ -124,7 +125,7 @@ function StateManagement({ ...pageProps }) {
 		}
 	};
 
-	const handleEditTodo = (id) => {
+	const handleEditTodo = (id: any) => {
 		const todo = stateManagement.todos[id];
 		setTitle(todo.title);
 		setDesc(todo.desc);
@@ -132,19 +133,19 @@ function StateManagement({ ...pageProps }) {
 		setIsEdit(todo);
 	};
 
-	const inlineUpdateStatus = (id, status) => {
+	const inlineUpdateStatus = (id: any, status: any) => {
 		console.log("status", id, status);
 
-		let newStatus = 1;
+		let newStatus = true;
 		if (status) {
-			newStatus = 0;
+			newStatus = false;
 		}
 
 		if (_.size(isEdit)) {
 			setStatus(newStatus);
 		}
 
-		setStateManagement((prevStateManagement) => {
+		setStateManagement((prevStateManagement: any) => {
 			return {
 				...prevStateManagement, // to preserve all the states
 				todos: {
@@ -155,17 +156,17 @@ function StateManagement({ ...pageProps }) {
 		});
 	};
 
-	const [todoLists, setTodoLists] = useState({});
+	const [todoLists, setTodoLists] = useState();
 	useEffect(() => {
-		let todos = {};
-		todos = Object.entries(stateManagement.todos).map((v, k) => {
+		let todos: any;
+		todos = Object.entries(stateManagement.todos).map((v: any, k) => {
 			v = v[1];
 
-			let checked = "";
+			let checked = false;
 			let statusClass = "bg-red-500";
 			if (parseInt(v.status)) {
 				statusClass = "bg-green-500";
-				checked = "checked";
+				checked = true;
 			}
 
 			return (
@@ -247,16 +248,16 @@ function StateManagement({ ...pageProps }) {
 		setTodoLists(todos);
 	}, [stateManagement]);
 
-	const onChangeStatus = (checked) => {
+	const onChangeStatus = (checked: any) => {
 		console.log("onChangeStatus", checked);
 		setStatus(checked); // Update the state
 	};
 
 	const handleCancelEdit = () => {
-		setIsEdit("");
+		setIsEdit(todoDefault);
 		setTitle("");
 		setDesc("");
-		setStatus("");
+		setStatus(false);
 	};
 
 	/*const handleAddTasks = (e) => {
@@ -275,7 +276,7 @@ function StateManagement({ ...pageProps }) {
         })
     }*/
 
-	const handleDateSelect = (date: Date | null) => {
+	const handleDateSelect = (date: any) => {
 		setSelectedDate(date); // Update the state when a date is selected
 	};
 
@@ -316,13 +317,14 @@ function StateManagement({ ...pageProps }) {
 									</div>
 
 									<textarea
-										type="text"
 										name="desc"
 										value={desc || ""}
-										onChange={(e) => setDesc(e.target.value)}
+										onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+											setDesc(e.target.value)
+										}
 										placeholder="Description"
-										className=" text-black placeholder-gray-600 hover:placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-gray-200 focus:bg-white dark:focus:bg-gray-200 focus:outline-none focus:shadow-outline focus:ring-1 ring-offset-current ring-offset-2 ring-gray-400"
-									></textarea>
+										className="text-black placeholder-gray-600 hover:placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200 focus:border-gray-200 focus:bg-white dark:focus:bg-gray-200 focus:outline-none focus:shadow-outline focus:ring-1 ring-offset-current ring-offset-2 ring-gray-400"
+									/>
 
 									<div className="my-1 text-l flex justify-start items-end gap-2">
 										<p className="">Selected Date:</p>
