@@ -143,8 +143,6 @@ function StateManagement({ ...pageProps }) {
 	};
 
 	const inlineUpdateStatus = (id: any, status: any) => {
-		console.log("status", id, status);
-
 		let newStatus = true;
 		if (status) {
 			newStatus = false;
@@ -165,7 +163,6 @@ function StateManagement({ ...pageProps }) {
 		});
 	};
 
-	console.log(stateManagement.todos);
 	const [todoLists, setTodoLists] = useState();
 	useEffect(() => {
 		let todos: any;
@@ -222,7 +219,7 @@ function StateManagement({ ...pageProps }) {
 						</td>
 						<td className="py-5 px-3 align-top w-fit">
 							<div className="flex gap-4 justify-start items-center w-fit">
-								<AlertDialog>
+								<AlertDialog className="mx-10">
 									<AlertDialogTrigger asChild>
 										<button
 											onClick={() => handleDeleteTodo(v.id)}
