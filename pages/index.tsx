@@ -178,7 +178,7 @@ function StateManagement({ ...pageProps }) {
 				>
 					<td className="p-4 max-w-xs align-top">{v.title}</td>
 					<td className="p-4 max-w-xs align-top">{v.desc || "--"}</td>
-					<td className="hidden p-4 text-center text-sm align-top">
+					<td className="p-4 text-center text-sm align-top">
 						<label
 							htmlFor={`status_${v.id}`}
 							className="flex items-center cursor-pointer"
@@ -425,7 +425,7 @@ function StateManagement({ ...pageProps }) {
 												<th className="text-lg text-gray-900 px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
 													Description
 												</th>
-												<th className="hidden text-lg text-gray-900 px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+												<th className="text-lg text-gray-900 px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
 													Status
 												</th>
 												<th className="text-lg text-gray-900 px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
