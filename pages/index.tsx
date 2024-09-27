@@ -417,7 +417,7 @@ function StateManagement({ ...pageProps }) {
 								</h1>
 							</div>
 						</div>
-						<div className=" p-5 pt-0">
+						<div className=" p-5 pt-0 overflow-x-auto	">
 							{_.size(todoLists) != 0 ? (
 								<table className="w-full table-auto border-collapse">
 									<thead className="text-left">
