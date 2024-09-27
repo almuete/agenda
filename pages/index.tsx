@@ -139,6 +139,7 @@ function StateManagement({ ...pageProps }) {
 		setDesc(todo.desc);
 		setStatus(todo.status);
 		setIsEdit(todo);
+		window.scrollTo({ top: 0, behavior: "smooth" });
 	};
 
 	const inlineUpdateStatus = (id: any, status: any) => {
