@@ -46,7 +46,7 @@ function StateManagement({ ...pageProps }) {
 		}
 	};
 
-	const setLocalStorage = (name, value) => {
+	const setLocalStorage = (name: any, value: any) => {
 		if (typeof window !== "undefined") {
 			localStorage.setItem(name, value);
 		}
@@ -69,7 +69,7 @@ function StateManagement({ ...pageProps }) {
 		}
 	}, [stateManagement]);
 
-	const handleSaveTodos = (e) => {
+	const handleSaveTodos = (e: any) => {
 		e.preventDefault();
 		let id = uniqid.time();
 		const title = e.target.title.value;
