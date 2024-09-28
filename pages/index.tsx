@@ -85,7 +85,7 @@ function StateManagement({ ...pageProps }) {
 	});*/
 
 	const [stateManagement, setStateManagement] = useState({
-		todos: [],
+		todos: {},
 		tasks: [],
 	});
 
