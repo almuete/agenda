@@ -305,7 +305,7 @@ function StateManagement({ ...pageProps }) {
 						</td>
 						<td className="py-5 px-3 align-top w-fit">
 							<div className="flex gap-4 justify-start items-center w-fit">
-								<AlertDialog className="mx-10">
+								<AlertDialog>
 									<AlertDialogTrigger asChild>
 										<button
 											onClick={() => handleDeleteTodo(v.id)}
