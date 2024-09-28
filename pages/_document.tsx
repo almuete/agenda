@@ -4,7 +4,6 @@ export default function Document() {
 		<Html lang="en">
 			<Head>
 				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-				<title>Pocheng</title>
 			</Head>
 			<body className="antialiased">
 				<Main />
