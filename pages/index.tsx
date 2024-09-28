@@ -44,15 +44,31 @@ import {
 import { db } from "../lib/firebase";
 import { getAuth } from "firebase/auth";
 
+interface Todo {
+	id: string;
+	title: string;
+	desc: string;
+	status: boolean;
+	nstatus: boolean;
+	date: string;
+	todo: object;
+}
+
+interface StateManagement {
+	todos: Todo[];
+	// Add other properties if needed
+}
 function StateManagement({ ...pageProps }) {
-	const todoDefault = {
+	const todoDefault: Todo = {
 		id: "",
 		title: "",
 		desc: "",
-		nstatus: 0,
+		status: false,
+		nstatus: false,
 		date: "",
+		todo: {},
 	};
-	const [isEdit, setIsEdit] = useState(todoDefault);
+	const [isEdit, setIsEdit] = useState<Todo>();
 	const [title, setTitle] = useState("");
 	const [desc, setDesc] = useState("");
 	const [status, setStatus] = useState(false);
@@ -84,18 +100,7 @@ function StateManagement({ ...pageProps }) {
 			  };
 	});*/
 
-	interface Todo {
-		id: string,
-		title: string,
-		desc: string,
-		nstatus: boolean,
-		date: string,
-	}
-
-	const [stateManagement, setStateManagement] = useState({
-		todos: Todo[],
-		tasks: [],
-	});
+	const [stateManagement, setStateManagement] = useState<StateManagement>();
 
 	const [isTitleEmpty, setIsTitleEmpty] = useState(false);
 
@@ -150,7 +155,7 @@ function StateManagement({ ...pageProps }) {
 			return; // Prevents the function from executing if the user is not authenticated
 		}
 
-		let id = isEdit.id || uniqid.time();
+		let id = isEdit?.id || uniqid.time();
 		const title = e.target.title.value;
 		const desc = e.target.desc.value;
 		const nstatus = status ? 1 : 0;
@@ -190,10 +195,12 @@ function StateManagement({ ...pageProps }) {
 
 			//console.log("Document written with ID: ", docRef.id);
 
-			setTitle("");
-			setDesc("");
-			setStatus(false);
-			setIsEdit(todoDefault);
+			if (todoDefault) {
+				setTitle("");
+				setDesc("");
+				setStatus(false);
+				setIsEdit(todoDefault);
+			}
 
 			toast.success("Successfully added pocheng");
 		} catch (error) {
@@ -211,11 +218,11 @@ function StateManagement({ ...pageProps }) {
 			const docRef = doc(db, "pocheng", id); // Change 'users' to your collection name
 
 			try {
-				delete stateManagement.todos[id];
+				delete stateManagement?.todos[id];
 				setStateManagement((prevStateManagement: any) => {
 					return {
 						...prevStateManagement,
-						todos: stateManagement.todos,
+						todos: stateManagement?.todos,
 					};
 				});
 
@@ -233,12 +240,14 @@ function StateManagement({ ...pageProps }) {
 	};
 
 	const handleEditTodo = (id: any) => {
-		const todo = stateManagement.todos[id];
-		setTitle(todo.title);
-		setDesc(todo.desc);
-		setStatus(todo.status);
-		setIsEdit(todo);
-		window.scrollTo({ top: 0, behavior: "smooth" });
+		const todo = stateManagement?.todos[id];
+		if (todo) {
+			setTitle(todo.title);
+			setDesc(todo.desc);
+			setStatus(todo.status);
+			setIsEdit(todo);
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		}
 	};
 
 	const inlineUpdateStatus = (id: any, status: any) => {
@@ -247,7 +256,7 @@ function StateManagement({ ...pageProps }) {
 			newStatus = false;
 		}
 
-		if (_.size(isEdit) && isEdit.id) {
+		if (_.size(isEdit) && isEdit?.id) {
 			setStatus(newStatus);
 		}
 
@@ -265,7 +274,7 @@ function StateManagement({ ...pageProps }) {
 	const [todoLists, setTodoLists] = useState();
 	useEffect(() => {
 		let todos: any;
-		todos = Object.entries(_.sortBy(stateManagement.todos, ["date"])).map(
+		todos = Object.entries(_.sortBy(stateManagement?.todos, ["date"])).map(
 			(v: any, k) => {
 				v = v[1];
 
@@ -416,14 +425,14 @@ function StateManagement({ ...pageProps }) {
 										<ClipboardListIcon className="" />
 									</div>
 									<h1 className="inline text-2xl font-semibold leading-none ">
-										{_.size(isEdit) && isEdit.id ? "Update" : "Add"}
+										{_.size(isEdit) && isEdit?.id ? "Update" : "Add"}
 									</h1>
 								</div>
 							</div>
 							<div className="px-3 pb-3">
 								<div className="text-gray-900 hidden">
-									{_.size(isEdit) && isEdit.id && (
-										<div>Edit ID: {isEdit.id}</div>
+									{_.size(isEdit) && isEdit?.id && (
+										<div>Edit ID: {isEdit?.id}</div>
 									)}
 								</div>
 								<div className="flex flex-col gap-2">
@@ -485,7 +494,7 @@ function StateManagement({ ...pageProps }) {
 							<hr className="mt-4" />
 							<div className="flex flex-row-reverse p-3">
 								<div className="flex space-x-2 pl-3">
-									{_.size(isEdit) && isEdit.id && (
+									{_.size(isEdit) && isEdit?.id && (
 										<button
 											type="button"
 											onClick={() => handleCancelEdit()}
