@@ -73,7 +73,7 @@ function StateManagement({ ...pageProps }) {
 		}
 	};
 
-	const [stateManagement, setStateManagement] = useState(() => {
+	/*const [stateManagement, setStateManagement] = useState(() => {
 		const stateManagementLocalStorage = getLocalStorage("stateManagement");
 		return stateManagementLocalStorage
 			? JSON.parse(stateManagementLocalStorage)
@@ -82,6 +82,11 @@ function StateManagement({ ...pageProps }) {
 					todos: {},
 					tasks: {},
 			  };
+	});*/
+
+	const [stateManagement, setStateManagement] = useState({
+		todos: [],
+		tasks: [],
 	});
 
 	const [isTitleEmpty, setIsTitleEmpty] = useState(false);
