@@ -85,9 +85,11 @@ function StateManagement({ ...pageProps }) {
 	});*/
 
 	interface Todo {
-		id: number;
-		title: string;
-		completed: boolean;
+		id: string,
+		title: string,
+		desc: string,
+		nstatus: boolean,
+		date: string,
 	}
 
 	const [stateManagement, setStateManagement] = useState({
