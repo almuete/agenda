@@ -13,7 +13,7 @@ export default function SignIn() {
 			await signInWithEmailAndPassword(auth, email, password);
 			alert("Signed in successfully");
 		} catch (error) {
-			setError(error.message);
+			//setError(error.message);
 		}
 	};
 
