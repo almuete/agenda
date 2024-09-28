@@ -84,8 +84,14 @@ function StateManagement({ ...pageProps }) {
 			  };
 	});*/
 
+	interface Todo {
+		id: number;
+		title: string;
+		completed: boolean;
+	}
+
 	const [stateManagement, setStateManagement] = useState({
-		todos: {},
+		todos: Todo[],
 		tasks: [],
 	});
 
