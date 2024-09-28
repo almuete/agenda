@@ -29,6 +29,21 @@ import { Calendar } from "@/components/ui/calendar";
 import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns"; // Optional: for formatting the date
 
+import {
+	setDoc,
+	doc,
+	deleteDoc,
+	query,
+	orderBy,
+	limit,
+	getDocs,
+	collection,
+	Timestamp,
+} from "firebase/firestore"; // Import addDoc
+
+import { db } from "../lib/firebase";
+import { getAuth } from "firebase/auth";
+
 function StateManagement({ ...pageProps }) {
 	const todoDefault = {
 		id: "",
@@ -37,10 +52,8 @@ function StateManagement({ ...pageProps }) {
 		nstatus: 0,
 		date: "",
 	};
-	//console.log('pageProps', pageProps);
 	const [isEdit, setIsEdit] = useState(todoDefault);
 	const [title, setTitle] = useState("");
-	//const [name, setName] = useState();
 	const [desc, setDesc] = useState("");
 	const [status, setStatus] = useState(false);
 	const [isOpen, setIsOpen] = useState(false);
@@ -73,19 +86,65 @@ function StateManagement({ ...pageProps }) {
 
 	const [isTitleEmpty, setIsTitleEmpty] = useState(false);
 
-	useEffect(() => {
-		if (stateManagement && typeof window !== "undefined") {
-			setLocalStorage("stateManagement", JSON.stringify(stateManagement));
-		}
-	}, [stateManagement]);
+	async function fetchLimitedUsers() {
+		const usersCollectionRef = collection(db, "pocheng");
+		//const q = query(usersCollectionRef, orderBy("createdAt"), limit(5)); // Change 'createdAt' to your field name
+		const q = query(usersCollectionRef); // Change 'createdAt' to your field name
 
-	const handleSaveTodos = (e: any) => {
+		const snapshot = await getDocs(q);
+
+		const limitedUsersList = snapshot.docs.map((doc) => ({
+			id: doc.id,
+			...doc.data(),
+		}));
+		console.log("limitedUsersList", limitedUsersList);
+		return limitedUsersList;
+	}
+
+	useEffect(() => {
+		const loadUsers = async () => {
+			try {
+				const usersData = await fetchLimitedUsers(); // Change this to fetchActiveUsers or fetchLimitedUsers as needed
+
+				setStateManagement((prevStateManagement: any) => {
+					return {
+						...prevStateManagement, // to preserve all the states
+						todos: usersData,
+					};
+				});
+			} catch (err) {
+				console.log(err.message);
+			}
+		};
+
+		loadUsers();
+
+		/*if (stateManagement && typeof window !== "undefined") {
+			setLocalStorage("stateManagement", JSON.stringify(stateManagement));
+		}*/
+	}, []);
+
+	const auth = getAuth();
+
+	const handleSaveTodos = async (e: any) => {
 		e.preventDefault();
+
+		const auth = getAuth();
+		const user = auth.currentUser;
+
+		if (!user) {
+			console.error("User not authenticated. Cannot add document.");
+			return; // Prevents the function from executing if the user is not authenticated
+		}
+
 		let id = isEdit.id || uniqid.time();
 		const title = e.target.title.value;
 		const desc = e.target.desc.value;
 		const nstatus = status ? 1 : 0;
-		const date = selectedDate;
+		const date = String(selectedDate).replace(
+			"GMT+0800 (Philippine Standard Time)",
+			""
+		);
 
 		// check if fields is empty
 		//if(_.isEmpty(title) || _.isEmpty(desc)) return
@@ -93,24 +152,40 @@ function StateManagement({ ...pageProps }) {
 			setIsTitleEmpty(true);
 			return;
 		}
-
-		// save state
-		setStateManagement((prevStateManagement: any) => {
-			return {
-				...prevStateManagement, // to preserve all the states
-				todos: {
-					...prevStateManagement.todos, // get the current todo
-					[id]: { id, title, desc, nstatus, date }, // add new item
-				},
+		try {
+			const data = {
+				uid: user.uid,
+				id: id,
+				title: title,
+				description: desc,
+				status: nstatus,
+				date: date,
 			};
-		});
 
-		setTitle("");
-		setDesc("");
-		setStatus(false);
-		setIsEdit(todoDefault);
+			await setDoc(doc(db, "pocheng", id), data);
 
-		toast.success("Successfully added pocheng");
+			// save state
+			setStateManagement((prevStateManagement: any) => {
+				return {
+					...prevStateManagement, // to preserve all the states
+					todos: {
+						...prevStateManagement.todos, // get the current todo
+						[id]: { id, title, desc, nstatus, date }, // add new item
+					},
+				};
+			});
+
+			//console.log("Document written with ID: ", docRef.id);
+
+			setTitle("");
+			setDesc("");
+			setStatus(false);
+			setIsEdit(todoDefault);
+
+			toast.success("Successfully added pocheng");
+		} catch (error) {
+			console.error("Error adding document: ", error);
+		}
 	};
 
 	const handleDeleteTodo = (id: any) => {
@@ -118,16 +193,27 @@ function StateManagement({ ...pageProps }) {
 		setDeleteId(id);
 	};
 
-	const handleDeleteConfirmTodo = (confirmation: any, id: any) => {
+	const handleDeleteConfirmTodo = async (confirmation: any, id: any) => {
 		if (confirmation) {
-			let newTodoList = delete stateManagement.todos[id];
-			setStateManagement((prevStateManagement: any) => {
-				return {
-					...prevStateManagement,
-					todos: stateManagement.todos,
-				};
-			});
-			setIsOpen(false);
+			const docRef = doc(db, "pocheng", id); // Change 'users' to your collection name
+
+			try {
+				delete stateManagement.todos[id];
+				setStateManagement((prevStateManagement: any) => {
+					return {
+						...prevStateManagement,
+						todos: stateManagement.todos,
+					};
+				});
+
+				await deleteDoc(docRef);
+
+				setIsOpen(false);
+
+				console.log("Document deleted successfully");
+			} catch (error) {
+				console.error("Error deleting document: ", error);
+			}
 		} else {
 			setIsOpen(false);
 		}
@@ -186,7 +272,7 @@ function StateManagement({ ...pageProps }) {
 					>
 						<td className="py-5 px-3 max-w-xs align-top">{v.title}</td>
 						<td className="flex flex-col py-5 px-3 max-w-xs align-top w-auto">
-							<p>{format(v.date, "MMM dd, yy") || "--"}</p>
+							<p>{format(v.date, "MMM dd, yyyy") || "--"}</p>
 							<p>{v.desc || "--"}</p>
 						</td>
 						<td className="hidden py-5 px-3 text-center text-sm align-top">
@@ -215,7 +301,7 @@ function StateManagement({ ...pageProps }) {
 							</label>
 						</td>
 						<td className="hidden py-5 px-3 max-w-xs align-top">
-							{format(v.date, "MMM dd, yy") || "--"}
+							{format(v.date, "MMM dd, yyyy") || "--"}
 						</td>
 						<td className="py-5 px-3 align-top w-fit">
 							<div className="flex gap-4 justify-start items-center w-fit">
