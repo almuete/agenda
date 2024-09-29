@@ -6,6 +6,8 @@ import {
 	SaveIcon,
 	CollectionIcon,
 	BackspaceIcon,
+	LogoutIcon,
+	LoginIcon,
 } from "@heroicons/react/solid";
 import Modal from "./components/Modal";
 import _, { isEmpty } from "lodash";
@@ -44,7 +46,8 @@ import {
 } from "firebase/firestore"; // Import addDoc
 
 import { db } from "../lib/firebase";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { useRouter } from "next/router";
 
 interface Todo {
 	id: string;
@@ -78,6 +81,25 @@ function StateManagement({ ...pageProps }) {
 	const [deleteId, setDeleteId] = useState(false);
 	const [date, setDate] = useState(new Date());
 	const [selectedDate, setSelectedDate] = useState(new Date()); // State to store selected date
+	const [isLogged, setIsLogged] = useState(false);
+	const router = useRouter(); // To handle redirection after logout
+
+	useEffect(() => {
+		const auth = getAuth();
+
+		// Check for authentication state change
+		const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+			if (currentUser) {
+				setIsLogged(true); // User is logged in
+			} else {
+				setIsLogged(false); // User is logged in
+				router.push("/signin"); // Redirect to login if not logged in
+			}
+		});
+
+		// Cleanup subscription on unmount
+		return () => unsubscribe();
+	}, []);
 
 	const getLocalStorage = (name: any) => {
 		if (typeof window !== "undefined") {
@@ -436,175 +458,195 @@ function StateManagement({ ...pageProps }) {
 		setSelectedDate(date); // Update the state when a date is selected
 	};
 
-	return (
-		<div className="flex">
-			<div className="w-full m-2">
-				<div>
-					<h1 className="text-3xl uppercase font-extrabold text-gray-800 ">
-						POCHENG-
-					</h1>
-					<form onSubmit={(e) => handleSaveTodos(e)} method="post">
-						<div className="mt-2  rounded-lg shadow">
+	const handleLogout = async () => {
+		const auth = getAuth(); // Get the Auth instance
+		try {
+			await signOut(auth); // Sign out the user
+			console.log("User signed out successfully");
+			router.push("/signin"); // Redirect to the login page or home after logout
+		} catch (error) {
+			console.error("Error signing out: ", error);
+		}
+	};
+
+	if (!isLogged) {
+		return (
+			<div className="flex items-center justify-center h-screen">
+				<div className="border-gray-300 h-12 w-12 animate-spin rounded-full border-8 border-t-blue-600"></div>
+			</div>
+		);
+	} else {
+		return (
+			<div className="flex">
+				<div className="w-full m-2">
+					<div>
+						<h1 className="text-3xl uppercase font-extrabold text-gray-800 flex justify-between items-center gap-2">
+							<span>POCHENG- </span>
+							<button
+								type="submit"
+								className="flex items-center px-2 font-medium tracking-wide  capitalize bg-red-800 rounded-md hover:bg-red-700  focus:outline-none focus:bg-gray-900  transition duration-300 transform active:scale-95 ease-in-out text-white"
+								onClick={handleLogout}
+							>
+								<div className="w-6 h-6">
+									<LogoutIcon />
+								</div>
+							</button>
+						</h1>
+						<form onSubmit={(e) => handleSaveTodos(e)} method="post">
+							<div className="mt-2  rounded-lg shadow">
+								<div className="flex">
+									<div className="flex items-center py-4 pl-3 overflow-hidden">
+										<div className="w-6 h-6 ">
+											<ClipboardListIcon className="" />
+										</div>
+										<h1 className="inline text-2xl font-semibold leading-none ">
+											{isEdit?.id ? "Update" : "Add"}
+										</h1>
+									</div>
+								</div>
+								<div className="px-3 pb-3">
+									<div className="text-gray-900 hidden">
+										{isEdit?.id && <div>Edit ID: {isEdit?.id}</div>}
+									</div>
+									<div className="flex flex-col gap-2">
+										{/*<input type="text" name="name" value={name || ''} onChange={(e) => setName(e.target.value)} placeholder="Name" className=" text-black placeholder-gray-600 hover:placeholder-gray-600  w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-gray-200 focus:bg-white dark:focus:bg-gray-200 focus:outline-none focus:shadow-outline focus:ring-1 ring-offset-current ring-offset-2 ring-gray-400" />*/}
+										<input
+											type="text"
+											name="title"
+											value={title || ""}
+											onChange={(e) => setTitle(e.target.value)}
+											placeholder="Title"
+											className={`text-black placeholder-gray-600 hover:placeholder-gray-600  w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-gray-200 focus:bg-white dark:focus:bg-gray-200 focus:outline-none focus:shadow-outline focus:ring-1 ring-offset-current ring-offset-2 ring-gray-400 ${
+												isTitleEmpty ? "border-2 border-red-600" : ""
+											} `}
+										/>
+										{isTitleEmpty && (
+											<div className="text-red-600 font-semibold">
+												Title is required.
+											</div>
+										)}
+									</div>
+
+									<textarea
+										name="desc"
+										value={description || ""}
+										onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+											setDescription(e.target.value)
+										}
+										placeholder="Description"
+										className="text-black placeholder-gray-600 hover:placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200 focus:border-gray-200 focus:bg-white dark:focus:bg-gray-200 focus:outline-none focus:shadow-outline focus:ring-1 ring-offset-current ring-offset-2 ring-gray-400"
+									/>
+
+									<div className="my-1 text-l flex flex-col justify-start items-start gap-2">
+										<div className="group relative cursor-pointer">
+											<div className="flex justify-center items-center gap-2">
+												<p className="">Event Date:</p>
+												{selectedDate && (
+													<p className="font-bold">
+														{format(selectedDate, "MMMM dd, yyyy")}
+													</p>
+												)}
+											</div>
+
+											<div className="hidden group-hover:block absolute bg-white z-10 ">
+												<Calendar
+													mode="single"
+													selected={selectedDate}
+													onSelect={handleDateSelect}
+													className="rounded-md border w-fit mb-2"
+												/>
+											</div>
+										</div>
+
+										<label
+											htmlFor="status"
+											className="flex items-center cursor-pointer"
+										>
+											<div className=" mr-2">Status</div>
+											<div className="relative">
+												<Switch
+													checked={status}
+													onCheckedChange={onChangeStatus}
+												/>
+											</div>
+										</label>
+									</div>
+								</div>
+								<div className="px-5 "> </div>
+								<hr className="mt-4" />
+								<div className="flex p-3">
+									<div className="flex space-x-2">
+										{isEdit?.id && (
+											<button
+												type="button"
+												onClick={() => handleCancelEdit()}
+												className="flex items-center px-5 py-2.5 font-medium tracking-wide capitalize   bg-gray-200 rounded-md hover:bg-gray-600 hover:text-white  focus:outline-none focus:bg-gray-900  transition duration-300 transform active:scale-95 ease-in-out"
+											>
+												<div className="w-6 h-6">
+													<BackspaceIcon />
+												</div>
+												<span className="pl-2 mx-1">Cancel</span>
+											</button>
+										)}
+										<button
+											type="submit"
+											className="flex items-center px-5 py-2.5 font-medium tracking-wide  capitalize bg-blue-800 rounded-md hover:bg-blue-700  focus:outline-none focus:bg-gray-900  transition duration-300 transform active:scale-95 ease-in-out text-white"
+										>
+											<div className="w-6 h-6">
+												<SaveIcon />
+											</div>
+											<span className="pl-2 mx-1">Save</span>
+										</button>
+									</div>
+								</div>
+							</div>
+						</form>
+
+						<div className="mt-5  rounded-lg shadow text-gray-900">
 							<div className="flex">
-								<div className="flex items-center py-4 pl-3 overflow-hidden">
+								<div className="flex items-center py-5 pl-3 overflow-hidden">
 									<div className="w-6 h-6 ">
-										<ClipboardListIcon className="" />
+										<CollectionIcon className=" " />
 									</div>
 									<h1 className="inline text-2xl font-semibold leading-none ">
-										{isEdit?.id ? "Update" : "Add"}
+										Agenda
 									</h1>
 								</div>
 							</div>
-							<div className="px-3 pb-3">
-								<div className="text-gray-900 hidden">
-									{isEdit?.id && <div>Edit ID: {isEdit?.id}</div>}
-								</div>
-								<div className="flex flex-col gap-2">
-									{/*<input type="text" name="name" value={name || ''} onChange={(e) => setName(e.target.value)} placeholder="Name" className=" text-black placeholder-gray-600 hover:placeholder-gray-600  w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-gray-200 focus:bg-white dark:focus:bg-gray-200 focus:outline-none focus:shadow-outline focus:ring-1 ring-offset-current ring-offset-2 ring-gray-400" />*/}
-									<input
-										type="text"
-										name="title"
-										value={title || ""}
-										onChange={(e) => setTitle(e.target.value)}
-										placeholder="Title"
-										className={`text-black placeholder-gray-600 hover:placeholder-gray-600  w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-gray-200 focus:bg-white dark:focus:bg-gray-200 focus:outline-none focus:shadow-outline focus:ring-1 ring-offset-current ring-offset-2 ring-gray-400 ${
-											isTitleEmpty ? "border-2 border-red-600" : ""
-										} `}
-									/>
-									{isTitleEmpty && (
-										<div className="text-red-600 font-semibold">
-											Title is required.
-										</div>
-									)}
-								</div>
-
-								<textarea
-									name="desc"
-									value={description || ""}
-									onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
-										setDescription(e.target.value)
-									}
-									placeholder="Description"
-									className="text-black placeholder-gray-600 hover:placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200 focus:border-gray-200 focus:bg-white dark:focus:bg-gray-200 focus:outline-none focus:shadow-outline focus:ring-1 ring-offset-current ring-offset-2 ring-gray-400"
-								/>
-
-								<div className="my-1 text-l flex flex-col justify-start items-start gap-2">
-									<div className="group relative cursor-pointer">
-										<div className="flex justify-center items-center gap-2">
-											<p className="">Event Date:</p>
-											{selectedDate && (
-												<p className="font-bold">
-													{format(selectedDate, "MMMM dd, yyyy")}
-												</p>
-											)}
-										</div>
-
-										<div className="hidden group-hover:block absolute bg-white z-10 ">
-											<Calendar
-												mode="single"
-												selected={selectedDate}
-												onSelect={handleDateSelect}
-												className="rounded-md border w-fit mb-2"
-											/>
-										</div>
-									</div>
-
-									<label
-										htmlFor="status"
-										className="flex items-center cursor-pointer"
-									>
-										<div className=" mr-2">Status</div>
-										<div className="relative">
-											<Switch
-												checked={status}
-												onCheckedChange={onChangeStatus}
-											/>
-										</div>
-									</label>
-								</div>
+							<div className=" p-3 pt-0 overflow-x-auto	">
+								{_.size(todoLists) != 0 ? (
+									<table className="w-full table-auto border-collapse">
+										<thead className="text-left">
+											<tr>
+												<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-[400px]">
+													Title
+												</th>
+												<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-full">
+													Description
+												</th>
+												<th className="hidden text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+													Status
+												</th>
+												<th className="hidden text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-40">
+													Date
+												</th>
+												<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider align-left w-fit">
+													Actions
+												</th>
+											</tr>
+										</thead>
+										<tbody>{todoLists}</tbody>
+									</table>
+								) : (
+									<p>You dont have agenda</p>
+								)}
 							</div>
-							<div className="px-5 "> </div>
-							<hr className="mt-4" />
-							<div className="flex p-3">
-								<div className="flex space-x-2">
-									{isEdit?.id && (
-										<button
-											type="button"
-											onClick={() => handleCancelEdit()}
-											className="flex items-center px-5 py-2.5 font-medium tracking-wide capitalize   bg-gray-200 rounded-md hover:bg-gray-600 hover:text-white  focus:outline-none focus:bg-gray-900  transition duration-300 transform active:scale-95 ease-in-out"
-										>
-											<div className="w-6 h-6">
-												<BackspaceIcon />
-											</div>
-											<span className="pl-2 mx-1">Cancel</span>
-										</button>
-									)}
-									<button
-										type="submit"
-										className="flex items-center px-5 py-2.5 font-medium tracking-wide  capitalize bg-blue-800 rounded-md hover:bg-blue-700  focus:outline-none focus:bg-gray-900  transition duration-300 transform active:scale-95 ease-in-out text-white"
-									>
-										<div className="w-6 h-6">
-											<SaveIcon />
-										</div>
-										<span className="pl-2 mx-1">Save</span>
-									</button>
-								</div>
-							</div>
-						</div>
-					</form>
-
-					<div className="mt-5  rounded-lg shadow text-gray-900">
-						<div className="flex">
-							<div className="flex items-center py-5 pl-3 overflow-hidden">
-								<div className="w-6 h-6 ">
-									<CollectionIcon className=" " />
-								</div>
-								<h1 className="inline text-2xl font-semibold leading-none ">
-									Agenda
-								</h1>
-							</div>
-						</div>
-						<div className=" p-3 pt-0 overflow-x-auto	">
-							{_.size(todoLists) != 0 ? (
-								<table className="w-full table-auto border-collapse">
-									<thead className="text-left">
-										<tr>
-											<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-[400px]">
-												Title
-											</th>
-											<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-full">
-												Description
-											</th>
-											<th className="hidden text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-												Status
-											</th>
-											<th className="hidden text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-40">
-												Date
-											</th>
-											<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider align-left w-fit">
-												Actions
-											</th>
-										</tr>
-									</thead>
-									<tbody>{todoLists}</tbody>
-								</table>
-							) : (
-								<p>You dont have agenda</p>
-							)}
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
-	);
+		);
+	}
 }
-
-StateManagement.getInitialProps = async () => {
-	return {
-		props: {
-			timeEnding: 10,
-		},
-	};
-};
 
 export default StateManagement;
