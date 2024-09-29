@@ -297,28 +297,27 @@ function StateManagement({ ...pageProps }) {
 	};
 
 	const inlineUpdateStatus = async (id: any, status: any) => {
-		let nstatus = true;
-		if (status) {
-			nstatus = false;
-		}
-
-		setStateManagement((prevStateManagement: any) => {
+		try {
 			const data = {
-				status: nstatus,
+				status: !status,
 			};
-			const updatedTodos = prevStateManagement.todos.map((todo: any) => {
-				if (todo.id === id) {
-					// Return a new object with the updated value
-					return { ...todo, ...data };
-				}
-				return todo; // Keep the other todos unchanged
-			});
+			await updateDoc(doc(db, "pocheng", id), data);
 
-			return {
-				...prevStateManagement, // to preserve all the states
-				todos: updatedTodos,
-			};
-		});
+			setStateManagement((prevStateManagement: any) => {
+				const updatedTodos = prevStateManagement.todos.map((todo: any) => {
+					if (todo.id === id) {
+						// Return a new object with the updated value
+						return { ...todo, ...data };
+					}
+					return todo; // Keep the other todos unchanged
+				});
+
+				return {
+					...prevStateManagement, // to preserve all the states
+					todos: updatedTodos,
+				};
+			});
+		} catch (e) {}
 	};
 
 	const [todoLists, setTodoLists] = useState();
