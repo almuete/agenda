@@ -8,7 +8,7 @@ import {
 	BackspaceIcon,
 } from "@heroicons/react/solid";
 import Modal from "./components/Modal";
-import _ from "lodash";
+import _, { isEmpty } from "lodash";
 import uniqid from "uniqid";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -39,6 +39,8 @@ import {
 	getDocs,
 	collection,
 	Timestamp,
+	addDoc,
+	updateDoc,
 } from "firebase/firestore"; // Import addDoc
 
 import { db } from "../lib/firebase";
@@ -47,7 +49,7 @@ import { getAuth } from "firebase/auth";
 interface Todo {
 	id: string;
 	title: string;
-	desc: string;
+	description: string;
 	status: boolean;
 	nstatus: boolean;
 	date: string;
@@ -62,15 +64,15 @@ function StateManagement({ ...pageProps }) {
 	const todoDefault: Todo = {
 		id: "",
 		title: "",
-		desc: "",
+		description: "",
 		status: false,
 		nstatus: false,
 		date: "",
-		todo: {},
+		todo: [],
 	};
 	const [isEdit, setIsEdit] = useState<Todo>();
 	const [title, setTitle] = useState("");
-	const [desc, setDesc] = useState("");
+	const [description, setDescription] = useState("");
 	const [status, setStatus] = useState(false);
 	const [isOpen, setIsOpen] = useState(false);
 	const [deleteId, setDeleteId] = useState(false);
@@ -115,7 +117,6 @@ function StateManagement({ ...pageProps }) {
 			id: doc.id,
 			...doc.data(),
 		}));
-		console.log("limitedUsersList", limitedUsersList);
 		return limitedUsersList;
 	}
 
@@ -158,14 +159,13 @@ function StateManagement({ ...pageProps }) {
 		let id = isEdit?.id || uniqid.time();
 		const title = e.target.title.value;
 		const desc = e.target.desc.value;
-		const nstatus = status ? 1 : 0;
+		const nstatus = status ? true : false;
 		const date = String(selectedDate).replace(
 			"GMT+0800 (Philippine Standard Time)",
 			""
 		);
 
 		// check if fields is empty
-		//if(_.isEmpty(title) || _.isEmpty(desc)) return
 		if (_.isEmpty(title)) {
 			setIsTitleEmpty(true);
 			return;
@@ -180,24 +180,44 @@ function StateManagement({ ...pageProps }) {
 				date: date,
 			};
 
-			await setDoc(doc(db, "pocheng", id), data);
+			if (isEdit?.id) {
+				await updateDoc(doc(db, "pocheng", id), data);
 
-			// save state
-			setStateManagement((prevStateManagement: any) => {
-				return {
-					...prevStateManagement, // to preserve all the states
-					todos: {
-						...prevStateManagement.todos, // get the current todo
-						[id]: { id, title, desc, nstatus, date }, // add new item
-					},
-				};
-			});
+				// update state
+				setStateManagement((prevStateManagement: any) => {
+					const updatedTodos = prevStateManagement.todos.map((todo: any) => {
+						if (todo.id === id) {
+							// Return a new object with the updated value
+							return { ...todo, ...data };
+						}
+						return todo; // Keep the other todos unchanged
+					});
+
+					return {
+						...prevStateManagement, // to preserve all the states
+						todos: updatedTodos,
+					};
+				});
+			} else {
+				await setDoc(doc(db, "pocheng", id), data);
+
+				// save state
+				setStateManagement((prevStateManagement: any) => {
+					return {
+						...prevStateManagement, // to preserve all the states
+						todos: [
+							...prevStateManagement.todos, // get the current todo
+							data, // add new item
+						],
+					};
+				});
+			}
 
 			//console.log("Document written with ID: ", docRef.id);
 
 			if (todoDefault) {
 				setTitle("");
-				setDesc("");
+				setDescription("");
 				setStatus(false);
 				setIsEdit(todoDefault);
 			}
@@ -218,15 +238,16 @@ function StateManagement({ ...pageProps }) {
 			const docRef = doc(db, "pocheng", id); // Change 'users' to your collection name
 
 			try {
-				delete stateManagement?.todos[id];
+				await deleteDoc(docRef);
+
 				setStateManagement((prevStateManagement: any) => {
 					return {
 						...prevStateManagement,
-						todos: stateManagement?.todos,
+						todos: prevStateManagement.todos.filter(
+							(item: any) => item.id != id
+						),
 					};
 				});
-
-				await deleteDoc(docRef);
 
 				setIsOpen(false);
 
@@ -240,33 +261,40 @@ function StateManagement({ ...pageProps }) {
 	};
 
 	const handleEditTodo = (id: any) => {
-		const todo = stateManagement?.todos[id];
+		const index =
+			stateManagement?.todos.findIndex((todo) => todo.id == id) || 0;
+		const todo = stateManagement?.todos[index];
+		console.log("todo", todo);
 		if (todo) {
 			setTitle(todo.title);
-			setDesc(todo.desc);
+			setDescription(todo.description);
 			setStatus(todo.status);
 			setIsEdit(todo);
 			window.scrollTo({ top: 0, behavior: "smooth" });
 		}
 	};
 
-	const inlineUpdateStatus = (id: any, status: any) => {
-		let newStatus = true;
+	const inlineUpdateStatus = async (id: any, status: any) => {
+		let nstatus = true;
 		if (status) {
-			newStatus = false;
-		}
-
-		if (_.size(isEdit) && isEdit?.id) {
-			setStatus(newStatus);
+			nstatus = false;
 		}
 
 		setStateManagement((prevStateManagement: any) => {
+			const data = {
+				status: nstatus,
+			};
+			const updatedTodos = prevStateManagement.todos.map((todo: any) => {
+				if (todo.id === id) {
+					// Return a new object with the updated value
+					return { ...todo, ...data };
+				}
+				return todo; // Keep the other todos unchanged
+			});
+
 			return {
 				...prevStateManagement, // to preserve all the states
-				todos: {
-					...prevStateManagement.todos, // get the current todo
-					[id]: { ...prevStateManagement.todos[id], status: newStatus }, // add new item
-				},
+				todos: updatedTodos,
 			};
 		});
 	};
@@ -274,13 +302,11 @@ function StateManagement({ ...pageProps }) {
 	const [todoLists, setTodoLists] = useState();
 	useEffect(() => {
 		let todos: any;
-		todos = Object.entries(_.sortBy(stateManagement?.todos, ["date"])).map(
-			(v: any, k) => {
-				v = v[1];
-
+		if (!isEmpty(stateManagement?.todos)) {
+			todos = _.sortBy(stateManagement?.todos, ["date"]).map((v: any, k) => {
 				let checked = false;
 				let statusClass = "bg-red-500";
-				if (parseInt(v.status)) {
+				if (v.status) {
 					statusClass = "bg-green-500";
 					checked = true;
 				}
@@ -292,10 +318,10 @@ function StateManagement({ ...pageProps }) {
 							v.status ? "line-through" : ""
 						}`}
 					>
-						<td className="py-5 px-3 max-w-xs align-top">{v.title}</td>
-						<td className="flex flex-col py-5 px-3 max-w-xs align-top w-auto">
+						<td className="py-5 px-3 align-top">{v.title}</td>
+						<td className="flex flex-col py-5 px-3 align-top">
 							<p>{format(v.date, "MMM dd, yyyy") || "--"}</p>
-							<p>{v.desc || "--"}</p>
+							<p>{v.description || "--"}</p>
 						</td>
 						<td className="hidden py-5 px-3 text-center text-sm align-top">
 							<label
@@ -373,8 +399,8 @@ function StateManagement({ ...pageProps }) {
 						</td>
 					</tr>
 				);
-			}
-		);
+			});
+		}
 		setTodoLists(todos);
 	}, [stateManagement]);
 
@@ -386,7 +412,7 @@ function StateManagement({ ...pageProps }) {
 	const handleCancelEdit = () => {
 		setIsEdit(todoDefault);
 		setTitle("");
-		setDesc("");
+		setDescription("");
 		setStatus(false);
 	};
 
@@ -414,7 +440,7 @@ function StateManagement({ ...pageProps }) {
 		<div className="flex">
 			<div className="w-full m-2">
 				<div>
-					<h1 className="text-6xl uppercase font-extrabold text-gray-800 ">
+					<h1 className="text-3xl uppercase font-extrabold text-gray-800 ">
 						POCHENG-
 					</h1>
 					<form onSubmit={(e) => handleSaveTodos(e)} method="post">
@@ -425,15 +451,13 @@ function StateManagement({ ...pageProps }) {
 										<ClipboardListIcon className="" />
 									</div>
 									<h1 className="inline text-2xl font-semibold leading-none ">
-										{_.size(isEdit) && isEdit?.id ? "Update" : "Add"}
+										{isEdit?.id ? "Update" : "Add"}
 									</h1>
 								</div>
 							</div>
 							<div className="px-3 pb-3">
 								<div className="text-gray-900 hidden">
-									{_.size(isEdit) && isEdit?.id && (
-										<div>Edit ID: {isEdit?.id}</div>
-									)}
+									{isEdit?.id && <div>Edit ID: {isEdit?.id}</div>}
 								</div>
 								<div className="flex flex-col gap-2">
 									{/*<input type="text" name="name" value={name || ''} onChange={(e) => setName(e.target.value)} placeholder="Name" className=" text-black placeholder-gray-600 hover:placeholder-gray-600  w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-gray-200 focus:bg-white dark:focus:bg-gray-200 focus:outline-none focus:shadow-outline focus:ring-1 ring-offset-current ring-offset-2 ring-gray-400" />*/}
@@ -456,45 +480,54 @@ function StateManagement({ ...pageProps }) {
 
 								<textarea
 									name="desc"
-									value={desc || ""}
+									value={description || ""}
 									onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
-										setDesc(e.target.value)
+										setDescription(e.target.value)
 									}
 									placeholder="Description"
 									className="text-black placeholder-gray-600 hover:placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200 focus:border-gray-200 focus:bg-white dark:focus:bg-gray-200 focus:outline-none focus:shadow-outline focus:ring-1 ring-offset-current ring-offset-2 ring-gray-400"
 								/>
 
-								<div className="my-1 text-l flex justify-start items-end gap-2">
-									<p className="">Selected Date:</p>
-									{selectedDate && (
-										<p className="font-bold">
-											{format(selectedDate, "MMMM dd, yyyy")}
-										</p>
-									)}
-								</div>
+								<div className="my-1 text-l flex flex-col justify-start items-start gap-2">
+									<div className="group relative cursor-pointer">
+										<div className="flex justify-center items-center gap-2">
+											<p className="">Event Date:</p>
+											{selectedDate && (
+												<p className="font-bold">
+													{format(selectedDate, "MMMM dd, yyyy")}
+												</p>
+											)}
+										</div>
 
-								<Calendar
-									mode="single"
-									selected={selectedDate}
-									onSelect={handleDateSelect}
-									className="rounded-md border w-fit mb-2"
-								/>
-
-								<label
-									htmlFor="status"
-									className="flex items-center cursor-pointer py-2"
-								>
-									<div className=" mr-2">Status</div>
-									<div className="relative">
-										<Switch checked={status} onCheckedChange={onChangeStatus} />
+										<div className="hidden group-hover:block absolute bg-white z-10 ">
+											<Calendar
+												mode="single"
+												selected={selectedDate}
+												onSelect={handleDateSelect}
+												className="rounded-md border w-fit mb-2"
+											/>
+										</div>
 									</div>
-								</label>
+
+									<label
+										htmlFor="status"
+										className="flex items-center cursor-pointer"
+									>
+										<div className=" mr-2">Status</div>
+										<div className="relative">
+											<Switch
+												checked={status}
+												onCheckedChange={onChangeStatus}
+											/>
+										</div>
+									</label>
+								</div>
 							</div>
 							<div className="px-5 "> </div>
 							<hr className="mt-4" />
-							<div className="flex flex-row-reverse p-3">
-								<div className="flex space-x-2 pl-3">
-									{_.size(isEdit) && isEdit?.id && (
+							<div className="flex p-3">
+								<div className="flex space-x-2">
+									{isEdit?.id && (
 										<button
 											type="button"
 											onClick={() => handleCancelEdit()}
@@ -536,10 +569,10 @@ function StateManagement({ ...pageProps }) {
 								<table className="w-full table-auto border-collapse">
 									<thead className="text-left">
 										<tr>
-											<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+											<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-[400px]">
 												Title
 											</th>
-											<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+											<th className="text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-full">
 												Description
 											</th>
 											<th className="hidden text-lg text-gray-900 px-3 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
