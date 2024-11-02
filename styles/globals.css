@@ -20,6 +20,17 @@ body {
 	font-family: Arial, Helvetica, sans-serif;
 }
 
+.gradient-login {
+	@apply bg-diagonal-login;
+}
+
+.btn {
+	@apply duration-300 transition inline-block text-white bg-black focus:ring-4 ring-white font-medium text-sm xl:text-xl w-full px-5 py-2.5 xl:py-[11px] xl:px-[18px] disabled:bg-gray-500 text-center;
+}
+.btn.btn-navy {
+	@apply bg-navy hover:bg-black;
+}
+
 @layer utilities {
 	.text-balance {
 		text-wrap: balance;

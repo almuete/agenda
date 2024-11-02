@@ -1,15 +1,26 @@
+import {nextui} from '@nextui-org/theme';
 import type { Config } from "tailwindcss";
 
 const config: Config = {
 	darkMode: ["class"],
-	content: [
-		"./pages/**/*.{js,ts,jsx,tsx,mdx}",
-		"./components/**/*.{js,ts,jsx,tsx,mdx}",
-		"./app/**/*.{js,ts,jsx,tsx,mdx}",
-	],
+  content: [
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./node_modules/@nextui-org/theme/dist/components/[object Object].js"
+  ],
 	theme: {
 		extend: {
 			colors: {
+				cyan: {
+					DEFAULT: "#00BCF4",
+					2: "#03FFFF",
+				},
+				navy: {
+					DEFAULT: "#0A2840",
+					1: "#375873",
+					2: "#214664",
+				},
 				background: "hsl(var(--background))",
 				foreground: "hsl(var(--foreground))",
 				card: {
@@ -56,8 +67,11 @@ const config: Config = {
 				md: "calc(var(--radius) - 2px)",
 				sm: "calc(var(--radius) - 4px)",
 			},
+			backgroundImage: ({ theme }) => ({
+				"diagonal-login": `linear-gradient(198deg, #e6f9fc 55%, #fff 0)`,
+			}),
 		},
 	},
-	plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate")],
 };
 export default config;

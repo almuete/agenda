@@ -53,7 +53,7 @@ const Login = ({ ...props }) => {
           </div>
         </div>
         <div className="flex flex-wrap justify-center items-center w-full min-h-screen gradient-login">
-          <div className="w-[60%] ">
+          <div className="w-full xl:w-1/2 ">
             <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
               <h2 className="mb-[30px] text-2xl xl:text-[40px] font-medium text-center text-navy">
                 Welcome!
@@ -66,9 +66,7 @@ const Login = ({ ...props }) => {
                 Sign in to view your Outsourced Pulse dashboard
               </p>
               {bearer && (
-                <div className="text-center text-xl py-4 p-6 rounded-lg border border-navy bg-white text-navy mb-[30px]">
-                  Bearer {bearer}
-                </div>
+                <div className="text-center text-xl py-4">Bearer {bearer}</div>
               )}
               <div className="max-w-[423px] mx-auto p-10 bg-gradient-to-tr from-cyan-2 to-cyan rounded-[20px] hover:shadow-login focus:shadow-login transition-shadow mb-[30px]">
                 <form
